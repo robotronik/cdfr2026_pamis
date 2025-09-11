@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP PTS645VSM19PSMTR92_LFS
+D Tactile Switch, PTS645V Series, Side Actuated, Surface Mount, Round Button, 160 gf, 50mA at 12VDC
+K
+F https://www.ckswitches.com/media/1475/pts645v.pdf
+$ENDCMP
+#
+#End Doc Library

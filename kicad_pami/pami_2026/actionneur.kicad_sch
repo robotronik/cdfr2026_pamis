@@ -4123,7 +4123,7 @@
 			)
 		)
 	)
-	(global_label "tft_scl"
+	(global_label "tft_sda"
 		(shape input)
 		(at 186.69 116.84 0)
 		(fields_autoplaced yes)
@@ -4135,7 +4135,7 @@
 		)
 		(uuid "8467cf60-5e49-4497-a5d5-4f5a4e47f43b")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 195.6018 116.84 0)
+			(at 196.146 116.84 0)
 			(effects
 				(font
 					(size 1.27 1.27)

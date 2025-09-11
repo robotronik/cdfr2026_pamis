@@ -1,0 +1,9 @@
+Manufacturer=C & K COMPONENTS
+PartNumber=PTS645VSM19PSMTR92 LFS
+PartCategory=Switch
+PackageCategory=Other
+PinCount=7
+Version=2.5
+Released=2023-05-02 12:45:05
+Downloaded=2025-09-02 13:26:33
+3D=Y

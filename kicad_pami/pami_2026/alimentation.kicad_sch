@@ -2596,7 +2596,7 @@
 		)
 		(uuid "56968a64-b679-42ac-8774-8619ba1d0ef3")
 	)
-	(text "Lidar + STM32 + StepperDriver\n~400mA active max\n"
+	(text "Lidar + ESP32S3 + StepperDriver\n~400mA active max\n"
 		(exclude_from_sim no)
 		(at 106.426 125.73 0)
 		(effects
@@ -5341,72 +5341,6 @@
 		)
 	)
 	(symbol
-		(lib_id "power:+BATT")
-		(at 76.2 125.73 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "7d7b52e1-6ed0-4b0f-9c91-1336f79ccca5")
-		(property "Reference" "#PWR047"
-			(at 76.2 129.54 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "+BATT"
-			(at 76.2 120.65 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 76.2 125.73 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 76.2 125.73 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"+BATT\""
-			(at 76.2 125.73 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "ff2194c8-bf4f-45c6-889b-9edc24f30d50")
-		)
-		(instances
-			(project "pami_2026"
-				(path "/80cba519-c262-4e9f-8b39-63654ae3eb7e/5ae39c30-b525-417d-8ea6-b6338b53e8ca"
-					(reference "#PWR047")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:+3.3V")
 		(at 104.14 125.73 0)
 		(unit 1)
@@ -6409,6 +6343,72 @@
 	)
 	(symbol
 		(lib_id "power:+5V")
+		(at 76.2 125.73 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "c4e50618-8be6-4825-bce1-d7075fd0f2a4")
+		(property "Reference" "#PWR037"
+			(at 76.2 129.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+5V"
+			(at 76.2 120.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 76.2 125.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 76.2 125.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+5V\""
+			(at 76.2 125.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "3a4c638c-880d-44ef-9c87-b2bec7343fbe")
+		)
+		(instances
+			(project "pami_2026"
+				(path "/80cba519-c262-4e9f-8b39-63654ae3eb7e/5ae39c30-b525-417d-8ea6-b6338b53e8ca"
+					(reference "#PWR037")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+5V")
 		(at 214.63 132.08 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -6534,6 +6534,76 @@
 			(project "pami_2026"
 				(path "/80cba519-c262-4e9f-8b39-63654ae3eb7e/5ae39c30-b525-417d-8ea6-b6338b53e8ca"
 					(reference "#PWR041")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 243.84 140.97 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "dba1c65b-c9c5-497a-9f59-6d18a95c4cf3")
+		(property "Reference" "C4"
+			(at 247.65 139.6999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "100n"
+			(at 247.65 142.2399 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
+			(at 244.8052 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 243.84 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor"
+			(at 243.84 140.97 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "00de2319-637d-4859-9ffa-c332284d584c")
+		)
+		(pin "2"
+			(uuid "da3c2eda-b0d1-4253-bd5c-32f18ae114a4")
+		)
+		(instances
+			(project "pami_2026"
+				(path "/80cba519-c262-4e9f-8b39-63654ae3eb7e/5ae39c30-b525-417d-8ea6-b6338b53e8ca"
+					(reference "C4")
 					(unit 1)
 				)
 			)
@@ -6813,76 +6883,6 @@
 			(project "pami_2026"
 				(path "/80cba519-c262-4e9f-8b39-63654ae3eb7e/5ae39c30-b525-417d-8ea6-b6338b53e8ca"
 					(reference "C11")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C")
-		(at 243.84 140.97 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "ebb9e386-9d4a-4835-8c1b-d1821fdca368")
-		(property "Reference" "C24"
-			(at 247.65 139.6999 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "4.7u"
-			(at 247.65 142.2399 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder"
-			(at 244.8052 144.78 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 243.84 140.97 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Unpolarized capacitor"
-			(at 243.84 140.97 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "22bbcec0-afad-4488-bf66-71d5c96fa8eb")
-		)
-		(pin "2"
-			(uuid "b77df8e1-6656-40bd-a1c0-d35bdb06b082")
-		)
-		(instances
-			(project "pami_2026"
-				(path "/80cba519-c262-4e9f-8b39-63654ae3eb7e/5ae39c30-b525-417d-8ea6-b6338b53e8ca"
-					(reference "C24")
 					(unit 1)
 				)
 			)
