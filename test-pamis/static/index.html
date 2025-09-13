@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ESP32 Servo Control</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+        input[type=range] { width: 80%; }
+    </style>
+</head>
+<body>
+    <h1>Servo Control</h1>
+    <p>Angle: <span id="angleValue">90</span>°</p>
+    <input type="range" min="0" max="180" value="90" id="servoSlider"/>
+
+    <script>
+        const slider = document.getElementById("servoSlider");
+        const angleValue = document.getElementById("angleValue");
+
+        slider.addEventListener("input", function() {{
+            const angle = slider.value;
+            angleValue.textContent = angle;
+            fetch(`/servo?angle=${angle}`)
+                .then(response => console.log("Servo set to " + angle))
+                .catch(err => console.error(err));
+        }});
+    </script>
+</body>
+</html>
+
