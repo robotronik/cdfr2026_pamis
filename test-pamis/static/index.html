@@ -1,29 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <meta charset="utf-8">
-    <title>ESP32 Servo Control</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-        input[type=range] { width: 80%; }
-    </style>
+    <meta charset="UTF-8">
+    <title>Contrôle Servo via WebSocket</title>
 </head>
 <body>
-    <h1>Servo Control</h1>
-    <p>Angle: <span id="angleValue">90</span>°</p>
-    <input type="range" min="0" max="180" value="90" id="servoSlider"/>
+    <h1>Contrôle du Servo</h1>
+    <input type="range" id="angle" min="0" max="180" value="90">
+    <p>Angle envoyé: <span id="angleValue">90</span>°</p>
+
+    <h2>Retour ESP32</h2>
+    <p>Servo actuel: <span id="servoAngle">--</span>°</p>
+    <p>GPIO5: <span id="gpio5">--</span></p>
 
     <script>
-        const slider = document.getElementById("servoSlider");
+        const ws = new WebSocket("ws://" + location.hostname + ":8080");
+        const angleSlider = document.getElementById("angle");
         const angleValue = document.getElementById("angleValue");
+        const servoAngle = document.getElementById("servoAngle");
+        const gpio5 = document.getElementById("gpio5");
 
-        slider.addEventListener("input", function() {{
-            const angle = slider.value;
+        ws.onopen = () => {
+            console.log("Connexion WebSocket établie.");
+        };
+
+        ws.onmessage = (event) => {
+            console.log("Message reçu:", event.data);
+
+            try {
+                const data = JSON.parse(event.data);
+                if (data.angle !== undefined) {
+                    servoAngle.textContent = data.angle;
+                }
+                if (data.gpio5 !== undefined) {
+                    gpio5.textContent = data.gpio5 ? "HIGH (1)" : "LOW (0)";
+                }
+            } catch(e) {
+                console.log("Non-JSON message:", event.data);
+            }
+        };
+
+        angleSlider.addEventListener("input", () => {
+            const angle = angleSlider.value;
             angleValue.textContent = angle;
-            fetch(`/servo?angle=${angle}`)
-                .then(response => console.log("Servo set to " + angle))
-                .catch(err => console.error(err));
-        }});
+            ws.send(`angle=${angle}`);
+        });
     </script>
 </body>
 </html>

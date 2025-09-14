@@ -4,7 +4,7 @@ use esp_idf_hal::ledc::{LedcDriver, LedcTimerDriver};
 use heapless::String;
 
 use esp_idf_hal::delay::FreeRtos;
-use esp_idf_hal::peripherals::Peripherals;
+use esp_idf_hal::{gpio::PinDriver, peripherals::Peripherals};
 use esp_idf_svc::eventloop::EspSystemEventLoop;
 use esp_idf_svc::http::server::EspHttpServer;
 use esp_idf_svc::io::EspIOError;
@@ -16,9 +16,22 @@ use esp_idf_svc::hal::ledc;
 
 use embedded_svc::http::server::Method;
 
+use serde_json::json;
+
 use log::*;
+use std::io::{Read, Write};
+
+use embedded_websocket::{
+    framer::{Framer, ReadResult},
+    WebSocketSendMessageType, WebSocketServer,
+};
+use std::net::TcpListener;
 
 use std::sync::{Arc, Mutex};
+
+use crate::servo::Servo;
+
+mod servo;
 
 fn main() -> anyhow::Result<()> {
     esp_idf_svc::sys::link_patches();
@@ -27,6 +40,9 @@ fn main() -> anyhow::Result<()> {
     let peripherals = Peripherals::take().unwrap();
     let sys_loop = EspSystemEventLoop::take().unwrap();
     let nvs = <EspNvsPartition<NvsDefault>>::take().unwrap();
+
+    let gpio5 = PinDriver::input(peripherals.pins.gpio5)?;
+    let gpio5 = Arc::new(Mutex::new(gpio5));
 
     let timer_driver = LedcTimerDriver::new(
         peripherals.ledc.timer0,
@@ -39,30 +55,11 @@ fn main() -> anyhow::Result<()> {
         timer_driver,
         peripherals.pins.gpio3,
     )?;
-    let ledc_driver = Arc::new(Mutex::new(ledc));
-
-    let mut ledc = ledc_driver.lock().unwrap();
 
     info!("max duty is : {}", ledc.get_max_duty());
 
-    let max_duty_cycle = ledc.get_max_duty() as u32;
-    let min_duty = (25 * max_duty_cycle) / 1000;
-    let max_duty = (125 * max_duty_cycle) / 1000;
-    let duty_gap = max_duty - min_duty;
+    let mut servo1 = Servo::new(ledc, 90.0).unwrap();
 
-    fn duty_from_angle(deg: u32, min_duty: u32, duty_gap: u32) -> u32 {
-        let duty = min_duty + ((deg * duty_gap) / 180);
-        duty as u32
-    }
-    ledc.set_duty(duty_from_angle(180, min_duty, duty_gap))
-        .unwrap();
-    FreeRtos::delay_ms(250);
-    ledc.set_duty(duty_from_angle(90, min_duty, duty_gap))
-        .unwrap();
-    FreeRtos::delay_ms(250);
-    ledc.set_duty(duty_from_angle(0, min_duty, duty_gap))
-        .unwrap();
-    drop(ledc);
     const SSID: &str = env!("SSID");
     const PASSWORD: &str = env!("PASSWORD");
 
@@ -90,7 +87,6 @@ fn main() -> anyhow::Result<()> {
 
     let ip_info: ipv4::IpInfo = wifi.wifi().sta_netif().get_ip_info().unwrap();
     log::info!("Wi-Fi connected! IP address: {}", ip_info.ip);
-
     let mut server = EspHttpServer::new(&Default::default()).unwrap();
 
     server
@@ -107,52 +103,111 @@ fn main() -> anyhow::Result<()> {
         ip_info.ip
     );
 
-    let ledc_clone = ledc_driver.clone();
-    server.fn_handler(
-        "/servo",
-        Method::Get,
-        move |request| -> Result<(), EspIOError> {
-            let uri = request.uri(); // "/servo?angle=90"
+    let listener = TcpListener::bind("0.0.0.0:8080")?;
+    info!("WebSocket server listening on ws://{}:8080", ip_info.ip);
 
-            // Extraire la query string après '?'
-            let angle = uri
-                .split('?')
-                .nth(1) // prend tout après '?'
-                .and_then(|q| q.strip_prefix("angle=")) // enlever "angle="
-                .and_then(|s| s.parse::<u8>().ok()); // convertir en u8
+    for stream in listener.incoming() {
+        let mut stream = stream?;
+        let servo1_clone = servo1.clone();
+        let gpio5_clone = gpio5.clone();
 
-            if let Some(angle) = angle {
-                // Convertir angle en duty pour le servo (5% -> 10%)
-                let duty = duty_from_angle(angle as u32, min_duty, duty_gap);
-                log::info!("Servo angle set to {}", angle);
-                ledc_clone.lock().unwrap().set_duty(duty).unwrap();
-            }
-            let mut response = request.into_ok_response()?;
-            response.write(b"OK")?;
-            Ok(())
-        },
-    )?;
+        std::thread::Builder::new()
+            .stack_size(8192)
+            .spawn(move || -> anyhow::Result<()> {
+                let mut websocket = WebSocketServer::new_server();
 
+                let mut read_buf = Box::new([0u8; 1024]);
+                let mut write_buf = Box::new([0u8; 1024]);
+                let mut read_cursor = 0;
+
+                let n = stream.read(&mut *read_buf).unwrap();
+                let mut headers_arr = [httparse::EMPTY_HEADER; 16];
+                let mut request = httparse::Request::new(&mut headers_arr);
+                request.parse(&read_buf[..n]).unwrap();
+
+                let header_iter = request.headers.iter().map(|h| (h.name, h.value));
+                let websocket_context = embedded_websocket::read_http_header(header_iter)?
+                    .expect("WebSocket context missing");
+
+                let size = websocket.server_accept(
+                    &websocket_context.sec_websocket_key,
+                    None,
+                    &mut *write_buf,
+                )?;
+                stream.write_all(&write_buf[..size]).unwrap();
+
+                // 2️⃣ Créer le framer
+                let mut framer = Framer::new(
+                    &mut *read_buf,
+                    &mut read_cursor,
+                    &mut *write_buf,
+                    &mut websocket,
+                );
+
+                stream.set_nonblocking(true).unwrap();
+                let mut last_status = std::time::Instant::now();
+
+                let mut old_angle = servo1_clone.get_angle();
+                //for send the status the first time
+                let mut old_gpio5_state = !gpio5_clone.lock().unwrap().is_high() as u8;
+
+                loop {
+                    let mut temp_buf = [0u8; 512];
+                    match framer.read(&mut stream, &mut temp_buf) {
+                        Ok(ReadResult::Text(text)) => {
+                            info!("Received: {}", text);
+                            if let Some(angle_str) = text.strip_prefix("angle=") {
+                                if let Ok(angle) = angle_str.parse::<u32>() {
+                                    servo1_clone.set_angle(angle as f32).unwrap();
+                                }
+                            }
+                        }
+                        Ok(ReadResult::Closed) => {
+                            info!("Client disconnected");
+                            break Ok(());
+                        }
+                        Err(embedded_websocket::framer::FramerError::Io(e))
+                            if e.kind() == std::io::ErrorKind::WouldBlock =>
+                        {
+                            // Pas de message dispo
+                        }
+                        Err(e) => {
+                            warn!("WebSocket error: {:?}", e);
+                            break Ok(());
+                        }
+                        _ => {}
+                    }
+
+                    if last_status.elapsed() >= std::time::Duration::from_millis(100) {
+                        let angle = servo1_clone.get_angle();
+                        let gpio5_state = gpio5_clone.lock().unwrap().is_high() as u8;
+                        if (angle != old_angle) || (gpio5_state != old_gpio5_state) {
+                            let status = json!({
+                                "angle": angle,
+                                "gpio5": gpio5_state
+                            });
+                            framer
+                                .write(
+                                    &mut stream,
+                                    WebSocketSendMessageType::Text,
+                                    true,
+                                    status.to_string().as_bytes(),
+                                )
+                                .unwrap();
+                            last_status = std::time::Instant::now();
+                            info!("status {:?} send at {:?}", status, last_status);
+                            old_angle = angle;
+                            old_gpio5_state = gpio5_state;
+                        }
+                    }
+                    FreeRtos::delay_ms(10);
+                }
+            })?;
+    }
     loop {
-        /*
-        for i in (0..180).step_by(5) {
-            ledc_driver
-                .lock()
-                .unwrap()
-                .set_duty(duty_from_angle(i, min_duty, duty_gap))
-                .unwrap();
+        //never
+        info!("loop !! ");
 
-            FreeRtos::delay_ms(1000);
-        }
-        for i in (0..180).step_by(5).rev() {
-            ledc_driver
-                .lock()
-                .unwrap()
-                .set_duty(duty_from_angle(i, min_duty, duty_gap))
-                .unwrap();
-            FreeRtos::delay_ms(1000);
-        }
-        */
         FreeRtos::delay_ms(1000);
     }
 }
