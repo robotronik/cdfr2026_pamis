@@ -14,6 +14,9 @@ MCU="esp32c3"
 # Note: this variable is not used by the pio builder (`cargo build --features pio`)
 ESP_IDF_VERSION = "v5.3.3"
 SSID = "Freebox-0B0191"
-PASSWORD = "3znh6q4v99qsn3v4qz44cr"
-
+PASSWORD ="3znh6q4v99qsn3v4qz44cr"
+#SSID = "Wifitronik" 
+#PASSWORD = "32164626"
+#SSID="robotronik"
+#PASSWORD="robotronik"
 

@@ -1,7 +1,5 @@
 use anyhow::Result;
-use esp_idf_hal::ledc::config::TimerConfig;
-use esp_idf_hal::ledc::{LedcDriver, LedcTimerDriver};
-use esp_idf_svc::hal::gpio::PinDriver;
+use esp_idf_hal::ledc::LedcDriver;
 
 use std::sync::{Arc, Mutex};
 
@@ -18,17 +16,17 @@ impl<'a> Servo<'a> {
         let servo = Servo {
             ledc_driver: Arc::new(Mutex::new(ledc_driver)),
             current_value: Arc::new(Mutex::new(init_value)),
-            max_duty: max_duty,
+            max_duty,
         };
         servo.set_angle(init_value)?;
         Ok(servo)
     }
 
     pub fn set_angle(&self, angle: f32) -> Result<()> {
-        *self.current_value.lock().unwrap() = angle;
         let mut driver = self.ledc_driver.lock().unwrap();
         let duty = self.calcul_duty(angle);
         driver.set_duty(duty)?;
+        *self.current_value.lock().unwrap() = angle;
         Ok(())
     }
 
@@ -37,6 +35,7 @@ impl<'a> Servo<'a> {
     }
 
     fn calcul_duty(&self, angle: f32) -> u32 {
+        let angle = angle.clamp(0.0, 180.0);
         let min_duty = (25 * self.max_duty) / 1000;
         let max_duty = (125 * self.max_duty) / 1000;
         let duty_gap = max_duty - min_duty;

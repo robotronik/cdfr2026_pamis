@@ -5,19 +5,25 @@
     <title>Contrôle Servo via WebSocket</title>
 </head>
 <body>
-    <h1>Contrôle du Servo</h1>
-    <input type="range" id="angle" min="0" max="180" value="90">
-    <p>Angle envoyé: <span id="angleValue">90</span>°</p>
+    <h1>Contrôle du Servo 1</h1>
+    <input type="range" id="servo1" min="0" max="180" value="90">
+    <p>Angle envoyé: <span id="angle1Value">90</span>°</p>
+    <h1>Contrôle du Servo 2</h1>
+    <input type="range" id="servo2" min="0" max="180" value="90">
+    <p>Angle envoyé: <span id="angle2Value">90</span>°</p>
 
     <h2>Retour ESP32</h2>
-    <p>Servo actuel: <span id="servoAngle">--</span>°</p>
+    <p>Servo actuel: <span id="servo1Angle">--</span>°</p>
     <p>GPIO5: <span id="gpio5">--</span></p>
 
     <script>
         const ws = new WebSocket("ws://" + location.hostname + ":8080");
-        const angleSlider = document.getElementById("angle");
-        const angleValue = document.getElementById("angleValue");
-        const servoAngle = document.getElementById("servoAngle");
+        const angle1Slider = document.getElementById("servo1");
+        const angle1Value = document.getElementById("angle1Value");
+        const servo1Angle = document.getElementById("servo1Angle");
+        const angle2Slider = document.getElementById("servo2");
+        const angle2Value = document.getElementById("angle2Value");
+        const servo2Angle = document.getElementById("servo2Angle");
         const gpio5 = document.getElementById("gpio5");
 
         ws.onopen = () => {
@@ -40,10 +46,15 @@
             }
         };
 
-        angleSlider.addEventListener("input", () => {
-            const angle = angleSlider.value;
-            angleValue.textContent = angle;
-            ws.send(`angle=${angle}`);
+        angle1Slider.addEventListener("input", () => {
+            const angle = angle1Slider.value;
+            angle1Value.textContent = angle;
+            ws.send(`serv1=${angle}`);
+        });
+        angle1Slider.addEventListener("input", () => {
+            const angle = angle1Slider.value;
+            angle1Value.textContent = angle;
+            ws.send(`servo2=${angle}`);
         });
     </script>
 </body>

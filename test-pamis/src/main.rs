@@ -29,9 +29,8 @@ use std::net::TcpListener;
 
 use std::sync::{Arc, Mutex};
 
-use crate::servo::Servo;
-
 mod servo;
+use crate::servo::Servo;
 
 fn main() -> anyhow::Result<()> {
     esp_idf_svc::sys::link_patches();
@@ -50,15 +49,19 @@ fn main() -> anyhow::Result<()> {
             .frequency(50.into())
             .resolution(ledc::Resolution::Bits14),
     )?;
-    let ledc = LedcDriver::new(
+    let ledc1 = LedcDriver::new(
         peripherals.ledc.channel0,
-        timer_driver,
+        &timer_driver,
         peripherals.pins.gpio3,
     )?;
+    let ledc2 = LedcDriver::new(
+        peripherals.ledc.channel1,
+        &timer_driver,
+        peripherals.pins.gpio4,
+    )?;
 
-    info!("max duty is : {}", ledc.get_max_duty());
-
-    let mut servo1 = Servo::new(ledc, 90.0).unwrap();
+    let servo1 = Servo::new(ledc1, 90.0).unwrap();
+    let servo2 = Servo::new(ledc2, 90.0).unwrap();
 
     const SSID: &str = env!("SSID");
     const PASSWORD: &str = env!("PASSWORD");
@@ -73,17 +76,33 @@ fn main() -> anyhow::Result<()> {
 
     let ssid: String<32> = String::try_from(SSID).unwrap();
     let password: String<64> = String::try_from(PASSWORD).unwrap();
+
     let wifi_configuration =
         esp_idf_svc::wifi::Configuration::Client(esp_idf_svc::wifi::ClientConfiguration {
             ssid: ssid,
             password: password,
+            auth_method: esp_idf_svc::wifi::AuthMethod::WPAWPA2Personal,
             ..Default::default()
         });
 
     wifi.set_configuration(&wifi_configuration).unwrap();
-    wifi.start().unwrap();
-    wifi.connect().unwrap();
-    wifi.wait_netif_up().unwrap();
+    wifi.start()?;
+    let scan_results = wifi.scan()?;
+    log::info!("Found {} Wi-Fi networks:", scan_results.len());
+
+    let mut found = false;
+    for ap in &scan_results {
+        let ssid_str = ap.ssid.as_str(); // pas besoin de from_utf8
+        log::info!("  SSID: {}, Signal: {}", ssid_str, ap.signal_strength);
+        if ssid_str == SSID {
+            found = true;
+        }
+    }
+    if !found {
+        log::warn!("⚠️ SSID '{}' not found during scan!", SSID);
+        // ici tu peux décider de retenter un scan, attendre, ou carrément redémarrer l'ESP32
+    }
+    connect_wifi(&mut wifi)?;
 
     let ip_info: ipv4::IpInfo = wifi.wifi().sta_netif().get_ip_info().unwrap();
     log::info!("Wi-Fi connected! IP address: {}", ip_info.ip);
@@ -109,6 +128,7 @@ fn main() -> anyhow::Result<()> {
     for stream in listener.incoming() {
         let mut stream = stream?;
         let servo1_clone = servo1.clone();
+        let servo2_clone = servo2.clone();
         let gpio5_clone = gpio5.clone();
 
         std::thread::Builder::new()
@@ -156,9 +176,14 @@ fn main() -> anyhow::Result<()> {
                     match framer.read(&mut stream, &mut temp_buf) {
                         Ok(ReadResult::Text(text)) => {
                             info!("Received: {}", text);
-                            if let Some(angle_str) = text.strip_prefix("angle=") {
+                            if let Some(angle_str) = text.strip_prefix("servo1=") {
                                 if let Ok(angle) = angle_str.parse::<u32>() {
                                     servo1_clone.set_angle(angle as f32).unwrap();
+                                }
+                            }
+                            if let Some(angle_str) = text.strip_prefix("servo2=") {
+                                if let Ok(angle) = angle_str.parse::<u32>() {
+                                    servo2_clone.set_angle(angle as f32).unwrap();
                                 }
                             }
                         }
@@ -213,4 +238,38 @@ fn main() -> anyhow::Result<()> {
 }
 fn index_html() -> &'static str {
     include_str!("../static/index.html")
+}
+
+use std::time::{Duration, Instant};
+
+fn connect_wifi(wifi: &mut BlockingWifi<EspWifi<'static>>) -> anyhow::Result<()> {
+    wifi.start()?;
+
+    let mut attempt = 0;
+    loop {
+        attempt += 1;
+        log::info!("Connecting to Wi-Fi... attempt {}", attempt);
+
+        if let Err(e) = wifi.connect() {
+            log::warn!("Wi-Fi connect error: {:?}", e);
+        }
+
+        // Timeout d'attente de 10 secondes max
+        let start = Instant::now();
+        loop {
+            match wifi.wait_netif_up() {
+                Ok(_) => {
+                    log::info!("Wi-Fi connected!");
+                    return Ok(());
+                }
+                Err(e) => {
+                    if start.elapsed() > Duration::from_secs(10) {
+                        log::warn!("Timeout waiting for netif_up: {:?}", e);
+                        break; // on sort pour réessayer
+                    }
+                    FreeRtos::delay_ms(500);
+                }
+            }
+        }
+    }
 }
