@@ -1,6 +1,9 @@
 use anyhow::Result;
+use esp_idf_hal::gpio::{InputPin, OutputPin};
 use esp_idf_hal::ledc::config::TimerConfig;
 use esp_idf_hal::ledc::{LedcDriver, LedcTimerDriver};
+use esp_idf_svc::hal::uart::*; 
+use esp_idf_hal::units::Time;
 use heapless::String;
 
 use esp_idf_hal::delay::FreeRtos;
@@ -32,6 +35,12 @@ use std::sync::{Arc, Mutex};
 mod servo;
 use crate::servo::Servo;
 
+mod motor;
+use crate::motor::{Direction, Motor};
+
+mod ydlidar_gs2;
+use crate::ydlidar_gs2::YDlidar;
+
 fn main() -> anyhow::Result<()> {
     esp_idf_svc::sys::link_patches();
     esp_idf_svc::log::EspLogger::initialize_default();
@@ -43,29 +52,64 @@ fn main() -> anyhow::Result<()> {
     let gpio5 = PinDriver::input(peripherals.pins.gpio5)?;
     let gpio5 = Arc::new(Mutex::new(gpio5));
 
-    let timer_driver = LedcTimerDriver::new(
+    //servo config
+    let servo_timer_driver = LedcTimerDriver::new(
         peripherals.ledc.timer0,
         &TimerConfig::default()
             .frequency(50.into())
             .resolution(ledc::Resolution::Bits14),
     )?;
     let ledc1 = LedcDriver::new(
-        peripherals.ledc.channel0,
-        &timer_driver,
+        peripherals.ledc.channel2,
+        &servo_timer_driver,
         peripherals.pins.gpio3,
     )?;
     let ledc2 = LedcDriver::new(
         peripherals.ledc.channel1,
-        &timer_driver,
+        &servo_timer_driver,
         peripherals.pins.gpio4,
     )?;
 
     let servo1 = Servo::new(ledc1, 90.0).unwrap();
     let servo2 = Servo::new(ledc2, 90.0).unwrap();
 
+    info!("config servo fini");
+    //motor config
+    let pin_a1 = PinDriver::output(peripherals.pins.gpio10.downgrade_output())?;
+    let motor_timer_driver = LedcTimerDriver::new(
+        peripherals.ledc.timer1,
+        &TimerConfig::default()
+            .frequency(25_000.into())
+            .resolution(ledc::Resolution::Bits10),
+    )?;
+    let pin_a2 = LedcDriver::new(
+        peripherals.ledc.channel0,
+        &motor_timer_driver,
+        peripherals.pins.gpio9,
+    )?;
+
+    let motor_a = Motor::new(pin_a1, pin_a2);
+    let pin_b1 = PinDriver::output(peripherals.pins.gpio21.downgrade_output())?;
+    let pin_b2 = LedcDriver::new(
+        peripherals.ledc.channel3,
+        &motor_timer_driver,
+        peripherals.pins.gpio20,
+    )?;
+
+    let motor_b = Motor::new(pin_b1, pin_b2);
+
+    motor_a.set_dir(Direction::Forward)?;
+    motor_b.set_dir(Direction::Forward)?;
+
+    info!("config moteur fini");
+
+
+
+    let uart = UartDriver::new(peripherals.uart1, peripherals.pins.gpio6.downgrade_output(), peripherals.pins.gpio7.downgrade_input(), None, None, &esp_idf_svc::hal::uart::config::Config::new().baudrate(115200.into()).rx_fifo_size(256) )?;
+    let lidar = ydlidar_gs2::YDlidar::new(uart)
+
     const SSID: &str = env!("SSID");
     const PASSWORD: &str = env!("PASSWORD");
-
     log::info!("Connecting to Wi-Fi network '{SSID}'...");
 
     let mut wifi = BlockingWifi::wrap(
@@ -129,6 +173,8 @@ fn main() -> anyhow::Result<()> {
         let mut stream = stream?;
         let servo1_clone = servo1.clone();
         let servo2_clone = servo2.clone();
+        let motor_a_clone = motor_a.clone();
+        let motor_b_clone = motor_b.clone();
         let gpio5_clone = gpio5.clone();
 
         std::thread::Builder::new()
@@ -146,9 +192,14 @@ fn main() -> anyhow::Result<()> {
                 request.parse(&read_buf[..n]).unwrap();
 
                 let header_iter = request.headers.iter().map(|h| (h.name, h.value));
-                let websocket_context = embedded_websocket::read_http_header(header_iter)?
-                    .expect("WebSocket context missing");
 
+                let websocket_context = match embedded_websocket::read_http_header(header_iter)? {
+                    Some(ctx) => ctx,
+                    None => {
+                        log::warn!("Client did not request WebSocket upgrade, closing connection");
+                        return Ok(());
+                    }
+                };
                 let size = websocket.server_accept(
                     &websocket_context.sec_websocket_key,
                     None,
@@ -175,7 +226,7 @@ fn main() -> anyhow::Result<()> {
                     let mut temp_buf = [0u8; 512];
                     match framer.read(&mut stream, &mut temp_buf) {
                         Ok(ReadResult::Text(text)) => {
-                            info!("Received: {}", text);
+                            //  info!("Received: {}", text);
                             if let Some(angle_str) = text.strip_prefix("servo1=") {
                                 if let Ok(angle) = angle_str.parse::<u32>() {
                                     servo1_clone.set_angle(angle as f32).unwrap();
@@ -184,6 +235,39 @@ fn main() -> anyhow::Result<()> {
                             if let Some(angle_str) = text.strip_prefix("servo2=") {
                                 if let Ok(angle) = angle_str.parse::<u32>() {
                                     servo2_clone.set_angle(angle as f32).unwrap();
+                                }
+                            }
+                            if let Some(speed_str) = text.strip_prefix("moteurAspeed=") {
+                                if let Ok(speed) = speed_str.parse::<u32>() {
+                                    motor_a_clone.set_speed(speed as f32).unwrap();
+                                }
+                            }
+                            if let Some(speed_str) = text.strip_prefix("moteurBspeed=") {
+                                if let Ok(speed) = speed_str.parse::<u32>() {
+                                    motor_b_clone.set_speed(speed as f32).unwrap();
+                                }
+                            }
+                            if let Some(val) = text.strip_prefix("motor1=") {
+                                if let Ok(speed) = val.parse::<f32>() {
+                                    info!("Received : motor1={speed}");
+                                    if speed >= 0.0 {
+                                        motor_a_clone.set_dir(Direction::Forward)?;
+                                    } else {
+                                        motor_a_clone.set_dir(Direction::Backward)?;
+                                    }
+                                    motor_a_clone.set_speed(speed.abs())?;
+                                }
+                            }
+
+                            if let Some(val) = text.strip_prefix("motor2=") {
+                                if let Ok(speed) = val.parse::<f32>() {
+                                    info!("Received : motor2={speed}");
+                                    if speed >= 0.0 {
+                                        motor_b_clone.set_dir(Direction::Forward)?;
+                                    } else {
+                                        motor_b_clone.set_dir(Direction::Backward)?;
+                                    }
+                                    motor_b_clone.set_speed(speed.abs())?;
                                 }
                             }
                         }
@@ -196,8 +280,15 @@ fn main() -> anyhow::Result<()> {
                         {
                             // Pas de message dispo
                         }
+                        Err(embedded_websocket::framer::FramerError::WebSocket(
+                            embedded_websocket::Error::ReadFrameIncomplete,
+                        )) => {
+                            //un petit soucis, mais rien de grave -> ferme pas la connection
+                            warn!("Websocket error ignored : ReadFrameIncomplete");
+                            continue;
+                        }
                         Err(e) => {
-                            warn!("WebSocket error: {:?}", e);
+                            log::error!("WebSocket error: {:?}", e);
                             break Ok(());
                         }
                         _ => {}
@@ -243,8 +334,6 @@ fn index_html() -> &'static str {
 use std::time::{Duration, Instant};
 
 fn connect_wifi(wifi: &mut BlockingWifi<EspWifi<'static>>) -> anyhow::Result<()> {
-    wifi.start()?;
-
     let mut attempt = 0;
     loop {
         attempt += 1;

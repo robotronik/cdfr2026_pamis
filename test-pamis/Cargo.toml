@@ -33,6 +33,7 @@ esp-idf-hal = "0.45.2"
 embedded-websocket = "0.9.4"
 httparse = "1.10.1"
 serde_json = "1.0.144"
+embedded-io = "0.6.1"
 
 # --- Optional Embassy Integration ---
 # esp-idf-svc = { version = "0.51", features = ["critical-section", "embassy-time-driver", "embassy-sync"] }
