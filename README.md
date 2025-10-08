@@ -10,6 +10,10 @@ Fait avec freecad 1.0.2
 Fait avec Kicad 9 
 4 couches, 50x80mm 
 ## Objectif 
+Pouvoir faire les actions demander
+Communication pour un control externe (wifi) 
+Logging
+Pathfinding 
 
 ## Composant 
 - Batterie : np-750 
@@ -23,6 +27,6 @@ Fait avec Kicad 9
 
 
 # Code 
-`//TODO`
-J'ai pour objectif de le réalisé en rust parce que j'aime le défi (et que personne pourras jamais reprendre mon code dans le club) 
+J'ai pour objectif de le réalisé en rust parce que j'aime le défi (et que personne pourras jamais relire mon code dans le club et me dire que fais pas de la bonne manière) 
 
+Le code est dans un repo différent

@@ -4639,7 +4639,7 @@
 				)
 			)
 		)
-		(property "Footprint" "LED_SMD:LED_SK6812MINI_PLCC4_3.5x3.5mm_P1.75mm"
+		(property "Footprint" "CustomLibrary:IN-PI33TBTPRPGPB"
 			(at 121.92 185.42 0)
 			(effects
 				(font

@@ -2642,6 +2642,12 @@
 		(uuid "10fad0b4-5d48-4375-8cd5-bf25739b8d61")
 	)
 	(junction
+		(at 72.39 69.85)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "2d2e23be-5550-42fe-b007-57c941fe568b")
+	)
+	(junction
 		(at 97.79 67.31)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -2652,6 +2658,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "4a979f65-4c9f-4d65-a5d6-16b61e7d5c14")
+	)
+	(junction
+		(at 72.39 67.31)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "4dd03536-cddc-47d1-8d19-ffcff0aa0306")
 	)
 	(junction
 		(at 104.14 133.35)
@@ -2827,7 +2839,7 @@
 	)
 	(wire
 		(pts
-			(xy 77.47 69.85) (xy 81.28 69.85)
+			(xy 59.69 69.85) (xy 72.39 69.85)
 		)
 		(stroke
 			(width 0)
@@ -3177,6 +3189,26 @@
 	)
 	(wire
 		(pts
+			(xy 72.39 69.85) (xy 81.28 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9ed99509-7a41-457a-b03a-ded2ce02c159")
+	)
+	(wire
+		(pts
+			(xy 59.69 67.31) (xy 72.39 67.31)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9fe4ac73-9a9c-4064-882f-ec7d05d60ba6")
+	)
+	(wire
+		(pts
 			(xy 208.28 134.62) (xy 214.63 134.62)
 		)
 		(stroke
@@ -3204,16 +3236,6 @@
 			(type default)
 		)
 		(uuid "aa288a27-8ac5-414c-b6b7-42fdc2dab869")
-	)
-	(wire
-		(pts
-			(xy 77.47 67.31) (xy 83.82 67.31)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "aa774b55-a7d0-45ab-9418-5ee30b08d21e")
 	)
 	(wire
 		(pts
@@ -3444,6 +3466,16 @@
 			(type default)
 		)
 		(uuid "ee06307d-c81d-44b8-968a-802d92837311")
+	)
+	(wire
+		(pts
+			(xy 72.39 67.31) (xy 83.82 67.31)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "efa79d8d-0ebd-4c4c-b858-55666db00db4")
 	)
 	(wire
 		(pts
@@ -5562,7 +5594,7 @@
 				)
 			)
 		)
-		(property "Footprint" "TerminalBlock:TerminalBlock_bornier-2_P5.08mm"
+		(property "Footprint" "Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical"
 			(at 88.9 62.23 0)
 			(effects
 				(font
@@ -5808,16 +5840,16 @@
 	)
 	(symbol
 		(lib_id "Connector:Conn_01x02_Pin")
-		(at 72.39 67.31 0)
+		(at 54.61 69.85 0)
+		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "9a276b55-c90c-4435-a4ee-cb1866869fcc")
 		(property "Reference" "J4"
-			(at 73.025 62.23 0)
+			(at 55.245 74.93 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5825,7 +5857,7 @@
 			)
 		)
 		(property "Value" "Conn_01x02_Pin"
-			(at 73.025 64.77 0)
+			(at 55.245 72.39 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5833,7 +5865,7 @@
 			)
 		)
 		(property "Footprint" "TerminalBlock:TerminalBlock_bornier-2_P5.08mm"
-			(at 72.39 67.31 0)
+			(at 54.61 69.85 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5842,7 +5874,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 72.39 67.31 0)
+			(at 54.61 69.85 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5851,7 +5883,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x02, script generated"
-			(at 72.39 67.31 0)
+			(at 54.61 69.85 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6468,6 +6500,74 @@
 			(project "pami_2026"
 				(path "/80cba519-c262-4e9f-8b39-63654ae3eb7e/5ae39c30-b525-417d-8ea6-b6338b53e8ca"
 					(reference "#PWR023")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x02_Pin")
+		(at 67.31 69.85 0)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "d02d7240-e753-4ac2-aa07-b5cd446ff890")
+		(property "Reference" "J6"
+			(at 67.945 74.93 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Conn_01x02_Pin"
+			(at 67.945 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical"
+			(at 67.31 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 67.31 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Generic connector, single row, 01x02, script generated"
+			(at 67.31 69.85 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ad29f34c-c439-4523-8aa2-84f641b5f19e")
+		)
+		(pin "2"
+			(uuid "4e53fd31-2ec8-4029-84e4-6b95dc68293e")
+		)
+		(instances
+			(project "pami_2026"
+				(path "/80cba519-c262-4e9f-8b39-63654ae3eb7e/5ae39c30-b525-417d-8ea6-b6338b53e8ca"
+					(reference "J6")
 					(unit 1)
 				)
 			)

@@ -8695,7 +8695,7 @@
 				)
 			)
 		)
-		(property "Value" "SW_DIP_x01"
+		(property "Value" "SW_gliss"
 			(at 266.7 30.48 0)
 			(effects
 				(font
@@ -8703,7 +8703,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_JST:JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical"
+		(property "Footprint" "Button_Switch_THT:SW_CK_JS202011AQN_DPDT_Angled"
 			(at 266.7 35.56 0)
 			(effects
 				(font
@@ -8748,15 +8748,15 @@
 	(symbol
 		(lib_id "Connector:Conn_01x05_Pin")
 		(at 170.18 132.08 0)
+		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "de9b8487-320d-4d70-8fd3-3eca8b33ea7a")
 		(property "Reference" "J5"
-			(at 170.815 121.92 0)
+			(at 170.815 142.24 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8764,7 +8764,7 @@
 			)
 		)
 		(property "Value" "Conn_01x05_Pin"
-			(at 170.815 124.46 0)
+			(at 170.815 139.7 0)
 			(effects
 				(font
 					(size 1.27 1.27)

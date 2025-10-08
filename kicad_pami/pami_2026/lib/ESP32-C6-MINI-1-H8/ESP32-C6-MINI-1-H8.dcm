@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP ESP32-C6-MINI-1-H8
+D 8 MB (Quad SPI) , 13.2  16.6  2.4 , 3.0 ~ 3.6 V , 2.4 GHz , 2412 ~ 2484 MHz , 40C ~ 105C
+K
+F https://www.mouser.ph/ProductDetail/Espressif-Systems/ESP32-C6-MINI-1-H8?qs=olJun0bQHM8q1UR%2FHSWi2A%3D%3D
+$ENDCMP
+#
+#End Doc Library
